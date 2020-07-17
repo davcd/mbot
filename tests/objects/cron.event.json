@@ -1,0 +1,13 @@
+{
+  "command": {
+    "name": "cloudfront",
+    "args": {},
+    "result": []
+  },
+  "output": {
+    "name": "telegram",
+    "args": {},
+    "result": []
+  }
+}
+

@@ -1,0 +1,45 @@
+{
+  "name": "mbot",
+  "version": "1.0.0",
+  "description": "Multipurpose bot | Built with javascript and serverless",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/davcd/mbot.git"
+  },
+  "scripts": {
+    "start": "node node_modules/serverless/bin/serverless offline start --noTimeout --dontPrintOutput --useChildProcesses --stage=local",
+    "nodemon": "nodemon --inspect node_modules/serverless/bin/serverless offline start --noTimeout --dontPrintOutput --stage=local",
+    "test": "node node_modules/jest/bin/jest",
+    "test:watch": "node node_modules/jest/bin/jest --watch"
+  },
+  "author": "davcd",
+  "license": "GPL-3.0",
+  "dependencies": {
+    "athena-express": "^6.0.1",
+    "aws-sdk": "^2.685.0",
+    "axios": "^0.19.2",
+    "bowser": "^2.9.0",
+    "dotenv": "^8.2.0",
+    "glob": "^7.1.6",
+    "moment-timezone": "^0.5.31",
+    "yup": "^0.29.1"
+  },
+  "devDependencies": {
+    "jest": "^26.0.1",
+    "mockdate": "^3.0.2",
+    "nock": "^13.0.2",
+    "serverless": "^1.71.3",
+    "serverless-dotenv-plugin": "^2.4.2",
+    "serverless-offline": "^6.1.7"
+  },
+  "jest": {
+    "verbose": true,
+    "setupFiles": [
+      "dotenv/config",
+      "<rootDir>/tests/setup.js"
+    ],
+    "collectCoverageFrom": [
+      "<rootDir>/src/**/*.js"
+    ]
+  }
+}

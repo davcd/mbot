@@ -1,0 +1,87 @@
+service: mbot
+
+package:
+  individually: true
+
+plugins:
+  - serverless-dotenv-plugin
+  - serverless-offline
+
+custom:
+  dotenv:
+    logging: false
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+
+  stage: dev
+  region: eu-west-3
+
+  stackName: ${self:service}-${self:provider.stage}
+
+  tags:
+    name: ${self:service}-${self:provider.stage}
+
+  iamManagedPolicies:
+    - arn:aws:iam::aws:policy/AmazonAthenaFullAccess
+    - arn:aws:iam::aws:policy/AmazonS3FullAccess
+
+  resourcePolicy:
+    - Effect: Allow
+      Principal: '*'
+      Action: execute-api:Invoke
+      Resource:
+        - execute-api:/*/POST/${self:service}
+      Condition:
+        IpAddress:
+          aws:SourceIp:
+            - '149.154.160.0/20'
+            - '91.108.4.0/22'
+
+functions:
+  handler:
+    handler: src/handler.entrypoint
+    memorySize: 256
+    timeout: 30
+    environment:
+      TELEGRAM_API_TOKEN: ${env:TELEGRAM_API_TOKEN}
+      TELEGRAM_CHAT_ID_DEFAULT: ${env:TELEGRAM_CHAT_ID_DEFAULT}
+      TELEGRAM_CHAT_ID_WHITELST: ${env:TELEGRAM_CHAT_ID_WHITELST}
+      ATHENA_RESULTS_BUCKET: ${env:ATHENA_RESULTS_BUCKET}
+      ATHENA_TABLE_DEFAULT: ${env:ATHENA_TABLE_DEFAULT}
+    events:
+      - http:
+          path: ${self:service}
+          method: post
+          cors: true
+      - schedule:
+          name: ${self:service}-${self:provider.stage}.Test
+          description: Checking correct deployment of the ${self:service}-${self:provider.stage} stack
+          rate: rate(2 minutes)
+          enabled: false
+          input: ${env:CRON_TEST}
+      - schedule:
+          name: ${self:service}-${self:provider.stage}.Daily
+          description: Daily execution of ${self:service}-${self:provider.stage}
+          rate: cron(0 22 * * ? *)
+          enabled: true
+          input: ${env:CRON_DAILY}
+      - schedule:
+          name: ${self:service}-${self:provider.stage}.Weekly
+          description: Weekly execution of ${self:service}-${self:provider.stage}
+          rate: cron(0 22 ? * 1 *)
+          enabled: true
+          input: ${env:CRON_WEEKLY}
+      - schedule:
+          name: ${self:service}-${self:provider.stage}.Monthly
+          description: Monthly execution of ${self:service}-${self:provider.stage}
+          rate: cron(0 22 L * ? *)
+          enabled: true
+          input: ${env:CRON_MONTHLY}
+      - schedule:
+          name: ${self:service}-${self:provider.stage}.Yearly
+          description: Yearly execution of ${self:service}-${self:provider.stage}
+          rate: cron(0 23 L 12 ? *)
+          enabled: true
+          input: ${env:CRON_YEARLY}
