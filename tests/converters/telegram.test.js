@@ -53,8 +53,8 @@ describe('Validation', () => {
 describe('Parse', () => {
 
     test('Valid event', () => {
-        process.env.TELEGRAM_SAFE_MODE = "false"
-        const body = buildBody('command output', false)
+        let body = buildBody('command output', false)
+        body = calcBodyAndSetEnvVars(body, false, true, false)
         const event = buildEvent(body)
         const flow = telegram.parse(event, files)
 
@@ -69,15 +69,15 @@ describe('Parse', () => {
     })
 
     test('Safe mode error', () => {
-        process.env.TELEGRAM_SAFE_MODE = "true"
-        const body = buildBody('command', true)
+        let body = buildBody('command', true)
+        body = calcBodyAndSetEnvVars(body, true, true, false)
 
         expectParseError(body, constants.telegram.TELEGRAM_SAFE_MODE_ERROR)
     })
 
     test('Command error', () => {
-        process.env.TELEGRAM_SAFE_MODE = "false"
-        const body = buildBody('text', true)
+        let body = buildBody('text', true)
+        body = calcBodyAndSetEnvVars(body, false, true, false)
 
         expectParseError(body, constants.errors.COMMAND)
     })
@@ -316,36 +316,32 @@ describe('Args', () => {
 describe('Safe mode', () => {
 
     test('Valid', () => {
-        const fn = () => safeModeFun(true, true, true)
+        const fn = () => safeModeFun(true, false, true)
 
         expect(fn).not.toThrowError(constants.telegram.TELEGRAM_SAFE_MODE_ERROR)
     })
 
     test('Disabled', () => {
-        const fn = () => safeModeFun(false, false, false)
+        const fn = () => safeModeFun(false, true, false)
 
         expect(fn).not.toThrowError(constants.telegram.TELEGRAM_SAFE_MODE_ERROR)
     })
 
     test('Sender is bot', () => {
-        const fn = () => safeModeFun(true, false, true)
+        const fn = () => safeModeFun(true, true, true)
 
         expect(fn).toThrowError(constants.telegram.TELEGRAM_SAFE_MODE_ERROR)
     })
 
     test('Chat id not in whitelist', () => {
-        const fn = () => safeModeFun(true, true, false)
+        const fn = () => safeModeFun(true, false, false)
 
         expect(fn).toThrowError(constants.telegram.TELEGRAM_SAFE_MODE_ERROR)
     })
 
-    const safeModeFun = (safeModeOk, isBotOk, whitelistOk) => {
-        const body = buildBody('text', false)
-
-        process.env.TELEGRAM_SAFE_MODE = safeModeOk ? "true" : "false"
-        body.message.from.is_bot = !isBotOk
-        process.env.TELEGRAM_CHAT_ID_WHITELST = whitelistOk ? body.message.chat.id.toString() : ''
-
+    const safeModeFun = (safeModeEnabled, isBot, whitelisted) => {
+        let body = buildBody('text', false)
+        body = calcBodyAndSetEnvVars(body, safeModeEnabled, isBot, whitelisted)
         telegram.checkSafeMode(body)
     }
 
@@ -368,4 +364,11 @@ const buildEvent = (body) => {
     event.body = JSON.stringify(body)
     event.httpMethod = 'POST'
     return event
+}
+
+const calcBodyAndSetEnvVars = (body, safeModeEnabled, isBot, whitelisted) => {
+    process.env.TELEGRAM_SAFE_MODE = safeModeEnabled ? "true" : "false"
+    process.env.TELEGRAM_CHAT_ID_WHITELST = whitelisted ? body.message.chat.id.toString() : ''
+    body.message.from.is_bot = isBot
+    return body
 }
