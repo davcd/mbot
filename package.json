@@ -17,7 +17,7 @@
   "dependencies": {
     "athena-express": "^6.0.1",
     "aws-sdk": "^2.685.0",
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "bowser": "^2.9.0",
     "dotenv": "^8.2.0",
     "glob": "^7.1.6",
